@@ -1,39 +1,29 @@
 import { useState, useEffect } from 'react';
+import { getLeaderboard } from '../../api/leaderboardApi';
 import './PuzzleLeaderboard.css';
 
 export default function PuzzleLeaderboard() {
     const [period, setPeriod] = useState('all-time');
     const [leaderboard, setLeaderboard] = useState([]);
     const [userRank, setUserRank] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         loadLeaderboard();
     }, [period]);
 
-    function loadLeaderboard() {
-        // Get all users' puzzle stats from localStorage
-        // In production, this would be from a backend API
-        const mockData = [
-            { rank: 1, name: 'ChessMaster', score: 1250, streak: 45, avatar: '👑' },
-            { rank: 2, name: 'TacticalGenius', score: 1180, streak: 32, avatar: '🔥' },
-            { rank: 3, name: 'PuzzleKing', score: 1050, streak: 28, avatar: '⭐' },
-            { rank: 4, name: 'StrategicMind', score: 980, streak: 21, avatar: '🎯' },
-            { rank: 5, name: 'CheckmateQueen', score: 925, streak: 19, avatar: '👸' },
-            { rank: 6, name: 'EndgameExpert', score: 890, streak: 17, avatar: '🏆' },
-            { rank: 7, name: 'Opening Guru', score: 845, streak: 15, avatar: '📚' },
-            { rank: 8, name: 'BlitzMaster', score: 800, streak: 12, avatar: '⚡' },
-            { rank: 9, name: 'PatientPlayer', score: 775, streak: 10, avatar: '🧘' },
-            { rank: 10, name: 'StudyHero', score: 750, streak: 8, avatar: '📖' }
-        ];
-
-        setLeaderboard(mockData);
+    async function loadLeaderboard() {
+        setLoading(true);
+        const data = await getLeaderboard(period);
+        setLeaderboard(data);
+        setLoading(false);
 
         // Calculate user's rank based on their XP
         const userScore = parseInt(localStorage.getItem('userXP') || '0');
         const userStreakVal = parseInt(localStorage.getItem('puzzleStreak') || '0');
 
         if (userScore > 0) {
-            const rank = mockData.filter(u => u.score > userScore).length + 1;
+            const rank = data.filter(u => u.score > userScore).length + 1;
             setUserRank({
                 rank,
                 name: 'You',
@@ -84,6 +74,16 @@ export default function PuzzleLeaderboard() {
                     <div className="col-streak">Streak</div>
                 </div>
 
+                {loading ? (
+                    <div className="table-body" style={{ textAlign: 'center', padding: '2rem' }}>
+                        Loading leaderboard...
+                    </div>
+                ) : leaderboard.length === 0 ? (
+                    <div className="table-body" style={{ textAlign: 'center', padding: '2rem' }}>
+                        No leaderboard data yet. Be the first to play!
+                    </div>
+                ) : (
+
                 <div className="table-body">
                     {leaderboard.map((entry) => (
                         <div
@@ -110,6 +110,7 @@ export default function PuzzleLeaderboard() {
                         </div>
                     ))}
                 </div>
+                )}
             </div>
 
             {userRank && userRank.rank > 10 && (

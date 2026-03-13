@@ -1,7 +1,12 @@
 /**
  * XP System - Gamification logic
- * Handles XP earning, level calculation, and reward distribution
+ * Handles XP earning, level calculation, and reward distribution.
+ * XP is written to localStorage immediately for instant UI updates,
+ * and persisted to Supabase user_stats asynchronously.
  */
+
+import { supabase } from '../services/supabase';
+import { updateUserStats } from '../api/statsApi';
 
 // XP earning rules
 export const XP_REWARDS = {
@@ -100,21 +105,27 @@ export function awardXP(amount, reason = '') {
     const newLevel = calculateLevel(newXP);
     const leveledUp = newLevel > currentLevel;
 
-    // Save to localStorage
+    // Immediate localStorage update for instant UI feedback
     localStorage.setItem('userXP', newXP.toString());
     localStorage.setItem('userLevel', newLevel.toString());
 
-    // Log the XP gain
-    console.log(`🎉 +${amount} XP! ${reason}`);
-
     if (leveledUp) {
-        console.log(`⬆️ Level Up! You are now level ${newLevel}!`);
-
-        // Trigger level up animation/notification
         const event = new CustomEvent('levelup', {
             detail: { oldLevel: currentLevel, newLevel, xpGained: amount }
         });
         window.dispatchEvent(event);
+    }
+
+    // Persist to Supabase asynchronously — fire-and-forget, never blocks UI
+    if (supabase) {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+                updateUserStats(user.id, {
+                    xp: newXP,
+                    level: newLevel,
+                }).catch(() => {});
+            }
+        }).catch(() => {});
     }
 
     return {

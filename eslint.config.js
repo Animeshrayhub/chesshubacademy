@@ -24,6 +24,15 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['warn', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
+      // react-hooks/set-state-in-effect is part of the React Compiler ruleset (v7).
+      // This project does not use the React Compiler, so async loadData() calls inside
+      // effects are correctly async and do not cause synchronous cascading renders.
+      'react-hooks/set-state-in-effect': 'off',
+        // The following rules are from the React Compiler lint ruleset bundled in
+        // eslint-plugin-react-hooks v7. They are disabled here because this project
+        // does not use the React Compiler (no babel-plugin-react-compiler).
+        'react-hooks/purity': 'off',
+        'react-hooks/immutability': 'off',
     },
   },
 ])

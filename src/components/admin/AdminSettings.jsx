@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import * as bookingApi from '../../api/bookingApi';
+import { getFeePlans, updateFeePlans } from '../../api/settingsApi';
 import './AdminSettings.css';
 
 export default function AdminSettings() {
@@ -15,6 +17,25 @@ export default function AdminSettings() {
     });
 
     const [saved, setSaved] = useState(false);
+    const [feePlans, setFeePlans] = useState([]);
+    const [feeSaved, setFeeSaved] = useState(false);
+
+    useEffect(() => {
+        const stored = localStorage.getItem('siteSettings');
+        if (stored) {
+            try { setSettings(JSON.parse(stored)); } catch { /* ignore */ }
+        }
+        loadFeePlans();
+    }, []);
+
+    const loadFeePlans = async () => {
+        try {
+            const plans = await getFeePlans();
+            setFeePlans(plans || []);
+        } catch (err) {
+            console.error('Error loading fee plans:', err);
+        }
+    };
 
     const handleChange = (field, value) => {
         setSettings(prev => ({ ...prev, [field]: value }));
@@ -26,10 +47,17 @@ export default function AdminSettings() {
         setTimeout(() => setSaved(false), 3000);
     };
 
-    const handleBackup = () => {
+    const handleBackup = async () => {
+        let bookings = [];
+        try {
+            bookings = await bookingApi.getBookings();
+        } catch {
+            bookings = JSON.parse(localStorage.getItem('demoBookings') || '[]');
+        }
+
         const data = {
-            bookings: JSON.parse(localStorage.getItem('demoBookings') || '[]'),
-            settings: settings,
+            bookings,
+            settings,
             timestamp: new Date().toISOString(),
         };
 
@@ -48,19 +76,40 @@ export default function AdminSettings() {
             reader.onload = (event) => {
                 try {
                     const data = JSON.parse(event.target.result);
-                    if (data.bookings) {
-                        localStorage.setItem('demoBookings', JSON.stringify(data.bookings));
+                    if (!data || typeof data !== 'object' || !data.timestamp) {
+                        alert('Invalid backup file format');
+                        return;
                     }
-                    if (data.settings) {
+                    if (data.settings && typeof data.settings === 'object') {
                         setSettings(data.settings);
                         localStorage.setItem('siteSettings', JSON.stringify(data.settings));
                     }
-                    alert('Backup restored successfully!');
-                } catch (error) {
+                    alert('Settings restored successfully!');
+                } catch {
                     alert('Invalid backup file');
                 }
             };
             reader.readAsText(file);
+        }
+    };
+
+    const handleUpdateFeeplan = (index, field, value) => {
+        const updated = [...feePlans];
+        if (field === 'sessions' || field === 'price' || field === 'classes_per_week') {
+            updated[index][field] = field === 'sessions' ? parseInt(value, 10) : (field === 'price' ? parseInt(value, 10) : parseInt(value, 10));
+        } else {
+            updated[index][field] = value;
+        }
+        setFeePlans(updated);
+    };
+
+    const handleSaveFeePlans = async () => {
+        try {
+            await updateFeePlans(feePlans);
+            setFeeSaved(true);
+            setTimeout(() => setFeeSaved(false), 3000);
+        } catch (err) {
+            alert('Error saving fee plans: ' + err.message);
         }
     };
 
@@ -189,6 +238,70 @@ export default function AdminSettings() {
                         </label>
                     </div>
                 </div>
+            </div>
+
+            {/* Training Packages */}
+            <div className="glass-card settings-section">
+                <h3>Training Packages</h3>
+                <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '14px', fontSize: '13px' }}>Weekly 2 Classes</p>
+                <div style={{ overflowX: 'auto', marginBottom: '20px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ borderBottom: '2px solid rgba(255,255,255,0.1)' }}>
+                                <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: 600 }}>Sessions</th>
+                                <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: 600 }}>Price (₹)</th>
+                                <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: 600 }}>Classes/Week</th>
+                                <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: 600 }}>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {feePlans.map((plan, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <td style={{ padding: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <input type="number" value={plan.sessions} min="1"
+                                            onChange={e => handleUpdateFeeplan(idx, 'sessions', e.target.value)}
+                                            className="form-input" style={{ width: '80px' }} />
+                                            {Number(plan.sessions) === 24 && (
+                                                <span style={{
+                                                    background: 'linear-gradient(90deg, #ffd700, #fbbf24)',
+                                                    color: '#0b0b0f',
+                                                    borderRadius: '999px',
+                                                    padding: '3px 8px',
+                                                    fontSize: '10px',
+                                                    fontWeight: 700,
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.4px',
+                                                    whiteSpace: 'nowrap',
+                                                }}>
+                                                    Most Popular
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '12px' }}>
+                                        <input type="number" value={plan.price} min="0"
+                                            onChange={e => handleUpdateFeeplan(idx, 'price', e.target.value)}
+                                            className="form-input" style={{ width: '100px' }} />
+                                    </td>
+                                    <td style={{ padding: '12px' }}>
+                                        <input type="number" value={plan.classes_per_week} min="1" max="7"
+                                            onChange={e => handleUpdateFeeplan(idx, 'classes_per_week', e.target.value)}
+                                            className="form-input" style={{ width: '80px' }} />
+                                    </td>
+                                    <td style={{ padding: '12px' }}>
+                                        <input type="text" value={plan.label || ''}
+                                            onChange={e => handleUpdateFeeplan(idx, 'label', e.target.value)}
+                                            className="form-input" placeholder="e.g., Beginner Plan" />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <button onClick={handleSaveFeePlans} className="btn btn-primary">
+                    {feeSaved ? '✓ Fee Plans Saved!' : 'Save Training Packages'}
+                </button>
             </div>
 
             {/* Backup & Restore */}

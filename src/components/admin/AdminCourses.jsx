@@ -1,113 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getCourses, updateCourse, toggleCourseStatus } from '../../api/courseApi';
 import './AdminCourses.css';
 
 export default function AdminCourses() {
-    const [courses, setCourses] = useState([
-        {
-            id: 1,
-            title: "Beginner",
-            level: "Level 1",
-            duration: "8-12 Weeks",
-            price: 4999,
-            originalPrice: 5999,
-            discount: 17,
-            rating: 4.9,
-            students: 312,
-            icon: "♟️",
-            color: "#8b5cf6",
-            status: "active",
-            description: "Perfect for absolute beginners. Learn the fundamentals of chess from scratch with interactive lessons.",
-            curriculum: [
-                "Chess board setup and piece movements",
-                "Basic rules and special moves",
-                "Elementary tactics: Forks, Pins, Skewers",
-                "Opening principles and development",
-                "Basic checkmate patterns",
-                "Simple endgame techniques"
-            ],
-            features: ["Live online classes", "Recorded sessions", "Practice puzzles", "Participation certificate"],
-            targetAudience: "Ages 5+ | Rating 0-800"
-        },
-        {
-            id: 2,
-            title: "Intermediate",
-            level: "Level 2",
-            duration: "12-16 Weeks",
-            price: 7999,
-            originalPrice: 9999,
-            discount: 20,
-            rating: 4.8,
-            students: 245,
-            icon: "♞",
-            color: "#3b82f6",
-            status: "active",
-            description: "Build strong fundamentals and develop competitive skills. For players with basic knowledge looking to advance.",
-            curriculum: [
-                "Advanced tactical patterns and combinations",
-                "Positional understanding and pawn structures",
-                "Middle game planning and strategy",
-                "Opening repertoire development",
-                "Endgame technique and theory",
-                "Tournament preparation and psychology",
-                "Weekly game analysis sessions"
-            ],
-            features: ["Expert coaching", "Tournament prep", "Opening database", "Performance certificate"],
-            targetAudience: "Rating 800-1400"
-        },
-        {
-            id: 3,
-            title: "Advanced",
-            level: "Level 3",
-            duration: "16-20 Weeks",
-            price: 12999,
-            originalPrice: 15999,
-            discount: 19,
-            rating: 5.0,
-            students: 189,
-            icon: "♚",
-            color: "#f59e0b",
-            status: "active",
-            description: "Competitive chess mastery. Advanced training for serious players aiming for titles and championships.",
-            curriculum: [
-                "Deep opening preparation with theory",
-                "Complex strategic middle game plans",
-                "Advanced endgame mastery and tablebase study",
-                "Professional game analysis from masters",
-                "Psychological warfare and time management",
-                "Tournament strategy and preparation",
-                "Title norm requirements and path"
-            ],
-            features: ["GM coaching", "Personalized prep", "Tournament support", "Advanced certificate"],
-            targetAudience: "Rating 1400-1800"
-        },
-        {
-            id: 4,
-            title: "Master",
-            level: "Level 4",
-            duration: "24+ Weeks",
-            price: 19999,
-            originalPrice: 24999,
-            discount: 20,
-            rating: 5.0,
-            students: 87,
-            icon: "👑",
-            color: "#ec4899",
-            status: "active",
-            description: "Elite-level training for aspiring grandmasters. Work one-on-one with titled players and GMs.",
-            curriculum: [
-                "Personalized opening repertoire with GM",
-                "Master-level strategic concepts",
-                "Advanced endgame positions and studies",
-                "International tournament preparation",
-                "Mental conditioning for elite play",
-                "Title norm achievement strategy",
-                "Professional career guidance",
-                "Access to GM database and resources"
-            ],
-            features: ["1-on-1 GM sessions", "Custom prep", "Tournament travel support", "Master certificate"],
-            targetAudience: "Rating 1800+ | Title aspirants"
-        }
-    ]);
+    const [courses, setCourses] = useState([]);
+
+    useEffect(() => {
+        getCourses().then(setCourses);
+    }, []);
 
     const [editingCourse, setEditingCourse] = useState(null);
     const [editForm, setEditForm] = useState({});
@@ -117,11 +17,10 @@ export default function AdminCourses() {
         setEditForm({ ...course });
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        await updateCourse(editingCourse, editForm);
         setCourses(courses.map(c => c.id === editingCourse ? editForm : c));
         setEditingCourse(null);
-        // Here you would normally save to backend/database
-        alert('Course updated successfully! (In production, this would save to database)');
     };
 
     const handleCancel = () => {
@@ -133,11 +32,12 @@ export default function AdminCourses() {
         setEditForm({ ...editForm, [field]: value });
     };
 
-    const toggleStatus = (courseId) => {
+    const handleToggleStatus = async (courseId) => {
+        const course = courses.find(c => c.id === courseId);
+        const newStatus = course.status === 'active' ? 'inactive' : 'active';
+        await toggleCourseStatus(courseId, newStatus);
         setCourses(courses.map(c =>
-            c.id === courseId
-                ? { ...c, status: c.status === 'active' ? 'inactive' : 'active' }
-                : c
+            c.id === courseId ? { ...c, status: newStatus } : c
         ));
     };
 
@@ -247,11 +147,11 @@ export default function AdminCourses() {
                                         <input
                                             type="number"
                                             className="form-input"
-                                            value={editForm.originalPrice}
-                                            onChange={(e) => handleInputChange('originalPrice', parseInt(e.target.value))}
+                                            value={editForm.original_price}
+                                            onChange={(e) => handleInputChange('original_price', parseInt(e.target.value))}
                                         />
                                         <small style={{ color: 'var(--color-text-tertiary)' }}>
-                                            Discount: {calculateDiscount(editForm.originalPrice, editForm.price)}%
+                                            Discount: {calculateDiscount(editForm.original_price, editForm.price)}%
                                         </small>
                                     </div>
 
@@ -280,8 +180,8 @@ export default function AdminCourses() {
                                         <input
                                             type="text"
                                             className="form-input"
-                                            value={editForm.targetAudience}
-                                            onChange={(e) => handleInputChange('targetAudience', e.target.value)}
+                                            value={editForm.target_audience}
+                                            onChange={(e) => handleInputChange('target_audience', e.target.value)}
                                         />
                                     </div>
                                 </div>
@@ -301,7 +201,7 @@ export default function AdminCourses() {
                                     </div>
                                     <div className="course-actions">
                                         <button
-                                            onClick={() => toggleStatus(course.id)}
+                                            onClick={() => handleToggleStatus(course.id)}
                                             className={`status-toggle ${course.status}`}
                                         >
                                             {course.status === 'active' ? '✓ Active' : '✖ Inactive'}
@@ -327,14 +227,14 @@ export default function AdminCourses() {
                                     </div>
                                     <div className="detail-item">
                                         <span className="detail-label">Target</span>
-                                        <span className="detail-value">{course.targetAudience}</span>
+                                        <span className="detail-value">{course.target_audience}</span>
                                     </div>
                                 </div>
 
                                 <div className="course-pricing">
                                     <div className="pricing-info">
                                         <div className="current-price">₹{course.price.toLocaleString()}</div>
-                                        <div className="original-price">₹{course.originalPrice.toLocaleString()}</div>
+                                        <div className="original-price">₹{(course.original_price || 0).toLocaleString()}</div>
                                         <div className="discount-badge">{course.discount}% OFF</div>
                                     </div>
                                     <div className="revenue-info">

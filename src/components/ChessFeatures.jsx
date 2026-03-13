@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import ChessBoard from './ChessBoard/ChessBoard';
 import DailyPuzzle from './Puzzles/DailyPuzzle';
 import PuzzleStreakTracker from './Puzzles/PuzzleStreakTracker';
@@ -7,11 +7,13 @@ import LevelProgressBar from './Gamification/LevelProgressBar';
 import DailyChallenges from './Gamification/DailyChallenges';
 import FontSizeControl from './Accessibility/FontSizeControl';
 import ChessVariants from './Variants/ChessVariants';
-import TutorialWalkthrough, { useTutorial } from './Tutorial/TutorialWalkthrough';
-import GameAnalysis from './Analysis/GameAnalysis';
-import DemoAssessment from './Assessment/DemoAssessment';
-import AntiComputerTraining from './Training/AntiComputerTraining';
+import TutorialWalkthrough from './Tutorial/TutorialWalkthrough';
+import { useTutorial } from './Tutorial/useTutorial';
 import './ChessFeatures.css';
+
+const GameAnalysis = lazy(() => import('./Analysis/GameAnalysis'));
+const DemoAssessment = lazy(() => import('./Assessment/DemoAssessment'));
+const AntiComputerTraining = lazy(() => import('./Training/AntiComputerTraining'));
 
 export default function ChessFeatures() {
     const [activeTab, setActiveTab] = useState('board');
@@ -219,19 +221,25 @@ export default function ChessFeatures() {
 
                     {activeTab === 'analysis' && (
                         <div className="feature-panel">
-                            <GameAnalysis />
+                            <Suspense fallback={<div className="lazy-loading">Loading Analysis...</div>}>
+                                <GameAnalysis />
+                            </Suspense>
                         </div>
                     )}
 
                     {activeTab === 'demo' && (
                         <div className="feature-panel">
-                            <DemoAssessment />
+                            <Suspense fallback={<div className="lazy-loading">Loading Assessment...</div>}>
+                                <DemoAssessment />
+                            </Suspense>
                         </div>
                     )}
 
                     {activeTab === 'training' && (
                         <div className="feature-panel">
-                            <AntiComputerTraining />
+                            <Suspense fallback={<div className="lazy-loading">Loading Training...</div>}>
+                                <AntiComputerTraining />
+                            </Suspense>
                         </div>
                     )}
                 </div>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Core Pages -->
+  <url>
+    <loc>https://chesshubacademy.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://chesshubacademy.com/blog</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://chesshubacademy.com/ebooks</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://chesshubacademy.com/tournaments</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- SEO Programmatic Pages -->
+  <url>
+    <loc>https://chesshubacademy.com/puzzles/daily</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chesshubacademy.com/openings/beginners</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chesshubacademy.com/endgames/basics</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chesshubacademy.com/chess-tips</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!--
+    Dynamic blog posts and SEO content pages (e.g. /blog/:slug, /learn/:slug)
+    are rendered client-side. For full dynamic sitemap generation,
+    use a build-time script or server-side sitemap endpoint.
+  -->
+</urlset>

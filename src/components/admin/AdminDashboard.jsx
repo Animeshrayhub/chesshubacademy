@@ -1,9 +1,19 @@
-import { useState, useEffect } from 'react';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+﻿import { useState, useEffect, useMemo } from 'react';
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getBookings } from '../../api/bookingApi';
+import { getAdminOverviewCounts } from '../../api/userApi';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
     const [bookings, setBookings] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [overviewCounts, setOverviewCounts] = useState({
+        students: 0,
+        coaches: 0,
+        sessionsToday: 0,
+        upcomingClasses: 0,
+        demoBookings: 0,
+    });
     const [stats, setStats] = useState({
         total: 0,
         today: 0,
@@ -13,54 +23,47 @@ export default function AdminDashboard() {
         confirmed: 0,
     });
 
+    const loadData = async () => {
+        setLoading(true);
+        const [data, counts] = await Promise.all([getBookings(), getAdminOverviewCounts()]);
+        setBookings(data);
+        setOverviewCounts(counts);
+
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekAgo = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const monthAgo = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const toDate = (b) => new Date(b.created_at || b.timestamp || 0);
+
+        setStats({
+            total: data.length,
+            today: data.filter(b => toDate(b) >= todayStart).length,
+            thisWeek: data.filter(b => toDate(b) >= weekAgo).length,
+            thisMonth: data.filter(b => toDate(b) >= monthAgo).length,
+            pending: data.filter(b => !b.status || b.status === 'pending').length,
+            confirmed: data.filter(b => b.status === 'confirmed').length,
+        });
+        setLoading(false);
+    };
+
     useEffect(() => {
         loadData();
     }, []);
 
-    const loadData = () => {
-        const storedBookings = JSON.parse(localStorage.getItem('demoBookings') || '[]');
-        setBookings(storedBookings);
-
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-        const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-        const todayCount = storedBookings.filter(b => {
-            const bookingDate = new Date(b.timestamp);
-            return bookingDate >= today;
-        }).length;
-
-        const weekCount = storedBookings.filter(b => {
-            const bookingDate = new Date(b.timestamp);
-            return bookingDate >= weekAgo;
-        }).length;
-
-        const monthCount = storedBookings.filter(b => {
-            const bookingDate = new Date(b.timestamp);
-            return bookingDate >= monthAgo;
-        }).length;
-
-        setStats({
-            total: storedBookings.length,
-            today: todayCount,
-            thisWeek: weekCount,
-            thisMonth: monthCount,
-            pending: storedBookings.filter(b => !b.status || b.status === 'pending').length,
-            confirmed: storedBookings.filter(b => b.status === 'confirmed').length,
+    // Generate last-7-days chart data from real bookings
+    const bookingsOverTime = useMemo(() => {
+        const today = new Date();
+        return Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(today);
+            d.setDate(today.getDate() - (6 - i));
+            const dateStr = d.toISOString().split('T')[0];
+            const count = bookings.filter(b => {
+                const bDate = (b.created_at || b.timestamp || '').split('T')[0];
+                return bDate === dateStr;
+            }).length;
+            return { name: d.toLocaleDateString('en-US', { weekday: 'short' }), bookings: count };
         });
-    };
-
-    // Chart data
-    const bookingsOverTime = [
-        { name: 'Mon', bookings: 4 },
-        { name: 'Tue', bookings: 3 },
-        { name: 'Wed', bookings: 7 },
-        { name: 'Thu', bookings: 5 },
-        { name: 'Fri', bookings: 8 },
-        { name: 'Sat', bookings: 6 },
-        { name: 'Sun', bookings: 2 },
-    ];
+    }, [bookings]);
 
     const statusData = [
         { name: 'Pending', value: stats.pending },
@@ -68,8 +71,16 @@ export default function AdminDashboard() {
     ];
 
     const COLORS = ['#8b5cf6', '#3b82f6', '#ec4899', '#06b6d4'];
-
     const recentBookings = bookings.slice(0, 5);
+
+    if (loading) {
+        return (
+            <div className="admin-dashboard">
+                <h2>Dashboard Overview</h2>
+                <p style={{ color: 'var(--text-secondary, #aaa)', padding: '2rem 0' }}>Loading live dataâ€¦</p>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-dashboard">
@@ -78,34 +89,42 @@ export default function AdminDashboard() {
             {/* Stats Cards */}
             <div className="stats-grid">
                 <div className="glass-card stat-card">
-                    <div className="stat-icon">📊</div>
+                    <div className="stat-icon">👨‍🎓</div>
                     <div className="stat-info">
-                        <div className="stat-value">{stats.total}</div>
-                        <div className="stat-label">Total Bookings</div>
+                        <div className="stat-value">{overviewCounts.students}</div>
+                        <div className="stat-label">Total Students</div>
+                    </div>
+                </div>
+
+                <div className="glass-card stat-card">
+                    <div className="stat-icon">👨‍🏫</div>
+                    <div className="stat-info">
+                        <div className="stat-value">{overviewCounts.coaches}</div>
+                        <div className="stat-label">Total Coaches</div>
                     </div>
                 </div>
 
                 <div className="glass-card stat-card">
                     <div className="stat-icon">📅</div>
                     <div className="stat-info">
-                        <div className="stat-value">{stats.today}</div>
-                        <div className="stat-label">Today</div>
+                        <div className="stat-value">{overviewCounts.sessionsToday}</div>
+                        <div className="stat-label">Sessions Today</div>
                     </div>
                 </div>
 
                 <div className="glass-card stat-card">
-                    <div className="stat-icon">📈</div>
+                    <div className="stat-icon">⏭️</div>
                     <div className="stat-info">
-                        <div className="stat-value">{stats.thisWeek}</div>
-                        <div className="stat-label">This Week</div>
+                        <div className="stat-value">{overviewCounts.upcomingClasses}</div>
+                        <div className="stat-label">Upcoming Classes</div>
                     </div>
                 </div>
 
                 <div className="glass-card stat-card">
-                    <div className="stat-icon">💰</div>
+                    <div className="stat-icon">📋</div>
                     <div className="stat-info">
-                        <div className="stat-value">{stats.thisMonth}</div>
-                        <div className="stat-label">This Month</div>
+                        <div className="stat-value">{overviewCounts.demoBookings || stats.total}</div>
+                        <div className="stat-label">Demo Bookings</div>
                     </div>
                 </div>
             </div>
@@ -113,17 +132,17 @@ export default function AdminDashboard() {
             {/* Charts */}
             <div className="charts-grid">
                 <div className="glass-card chart-card">
-                    <h3>Bookings This Week</h3>
+                    <h3>Bookings â€” Last 7 Days</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={bookingsOverTime}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                             <XAxis dataKey="name" stroke="#a1a1aa" />
-                            <YAxis stroke="#a1a1aa" />
+                            <YAxis stroke="#a1a1aa" allowDecimals={false} />
                             <Tooltip
                                 contentStyle={{ background: '#1a1a24', border: '1px solid #333', borderRadius: '8px' }}
                             />
                             <Legend />
-                            <Line type="monotone" dataKey="bookings" stroke="#8b5cf6" strokeWidth={2} />
+                            <Line type="monotone" dataKey="bookings" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
@@ -163,11 +182,11 @@ export default function AdminDashboard() {
                     <div className="activity-list">
                         {recentBookings.map((booking) => (
                             <div key={booking.id} className="activity-item">
-                                <div className="activity-icon">👤</div>
+                                <div className="activity-icon">ðŸ‘¤</div>
                                 <div className="activity-info">
                                     <div className="activity-title">{booking.name}</div>
                                     <div className="activity-details">
-                                        {booking.email} • {new Date(booking.timestamp).toLocaleDateString()}
+                                        {booking.email} â€¢ {new Date(booking.created_at || booking.timestamp).toLocaleDateString()}
                                     </div>
                                 </div>
                                 <div className="activity-status">

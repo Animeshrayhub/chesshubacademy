@@ -33,7 +33,7 @@ export default function LevelProgressBar() {
             const audio = new Audio('/level-up.mp3');
             audio.volume = 0.3;
             audio.play().catch(() => { });
-        } catch (e) { }
+        } catch { /* ignore audio play errors */ }
     }
 
     const progress = getLevelProgress();

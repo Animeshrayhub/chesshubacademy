@@ -1,18 +1,43 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase configuration
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://bxrkkremfbfprscuumeq.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Supabase configuration — env vars are required
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn(
+        '[ChessHub] Missing Supabase environment variables.\n' +
+        'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.\n' +
+        'Database features will be unavailable.'
+    );
+}
+
+// Create Supabase client (will be null if env vars missing or invalid)
+let _supabase = null;
+try {
+    if (supabaseUrl && supabaseAnonKey) {
+        _supabase = createClient(supabaseUrl, supabaseAnonKey);
+    }
+} catch (err) {
+    console.error('[ChessHub] Failed to create Supabase client:', err.message);
+}
+export const supabase = _supabase;
 
 // Database helper functions
+
+function requireClient() {
+    if (!supabase) {
+        return { success: false, error: new Error('Supabase not configured') };
+    }
+    return null;
+}
 
 /**
  * Save demo assessment to database
  */
 export async function saveDemoAssessment(data) {
+    const check = requireClient();
+    if (check) return check;
     try {
         const { data: result, error } = await supabase
             .from('demo_assessments')
@@ -51,6 +76,8 @@ export async function saveDemoAssessment(data) {
  * Get leaderboard data
  */
 export async function getLeaderboard(period = 'all') {
+    const check = requireClient();
+    if (check) return check;
     try {
         let query = supabase
             .from('leaderboard')
@@ -98,6 +125,8 @@ export async function getLeaderboard(period = 'all') {
  * Update user stats
  */
 export async function updateUserStats(userId, stats) {
+    const check = requireClient();
+    if (check) return check;
     try {
         const { data, error } = await supabase
             .from('user_stats')
@@ -128,6 +157,8 @@ export async function updateUserStats(userId, stats) {
  * Get user stats
  */
 export async function getUserStats(userId) {
+    const check = requireClient();
+    if (check) return check;
     try {
         const { data, error } = await supabase
             .from('user_stats')
@@ -151,6 +182,8 @@ export async function getUserStats(userId) {
  * Update leaderboard entry
  */
 export async function updateLeaderboardEntry(username, score, streak) {
+    const check = requireClient();
+    if (check) return check;
     try {
         const { data, error } = await supabase
             .from('leaderboard')

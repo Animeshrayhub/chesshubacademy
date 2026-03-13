@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Allow: /blog
+Allow: /blog/*
+Allow: /learn/*
+Allow: /puzzles/daily
+Allow: /openings/beginners
+Allow: /endgames/basics
+Allow: /chess-tips
+Allow: /ebooks
+Allow: /tournaments
+
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /dashboard
+Disallow: /demo-dashboard
+Disallow: /login
+
+Sitemap: https://chesshubacademy.com/sitemap.xml

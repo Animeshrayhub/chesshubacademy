@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { identifyOpening } from '../../utils/OpeningBook';
 import './OpeningDisplay.css';
 
@@ -6,7 +6,7 @@ export default function OpeningDisplay({ moveHistory }) {
     const [opening, setOpening] = useState(null);
 
     // Identify opening whenever move history changes
-    useState(() => {
+    useEffect(() => {
         if (moveHistory && moveHistory.length > 0) {
             const identified = identifyOpening(moveHistory);
             setOpening(identified);

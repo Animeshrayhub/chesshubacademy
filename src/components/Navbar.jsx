@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -117,11 +118,18 @@ export default function Navbar() {
                         <a href="#contact" className="navbar-link" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>
                             Contact
                         </a>
+
+                        <Link to="/ebooks" className="navbar-link">Ebooks</Link>
+                        <Link to="/tournaments" className="navbar-link">Tournaments</Link>
+                        <Link to="/blog" className="navbar-link">Blog</Link>
                     </div>
 
-                    <button className="btn btn-primary navbar-cta" onClick={() => scrollToSection('booking')}>
-                        Book Free Demo
-                    </button>
+                    <div className="navbar-actions">
+                        <Link to="/login" className="btn btn-secondary navbar-login">Login</Link>
+                        <button className="btn btn-primary navbar-cta" onClick={() => scrollToSection('booking')}>
+                            Book Free Demo
+                        </button>
+                    </div>
                 </div>
 
                 <button

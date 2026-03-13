@@ -1,6 +1,45 @@
+import { useState } from 'react';
+import { supabase } from '../services/supabase';
 import './Footer.css';
 
 export default function Footer({ onAdminClick }) {
+    const [newsletterEmail, setNewsletterEmail] = useState('');
+    const [subscribeStatus, setSubscribeStatus] = useState('idle');
+
+    const handleNewsletterSubmit = async (e) => {
+        e.preventDefault();
+        if (!newsletterEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newsletterEmail)) return;
+
+        setSubscribeStatus('submitting');
+        try {
+            if (supabase) {
+                const { error } = await supabase
+                    .from('newsletter_subscribers')
+                    .insert([{ email: newsletterEmail }]);
+                if (error && error.code === '23505') {
+                    setSubscribeStatus('already');
+                } else if (error) {
+                    throw error;
+                } else {
+                    setSubscribeStatus('success');
+                }
+            } else {
+                // Fallback: store locally
+                const subs = JSON.parse(localStorage.getItem('newsletter_subscribers') || '[]');
+                if (!subs.includes(newsletterEmail)) {
+                    subs.push(newsletterEmail);
+                    localStorage.setItem('newsletter_subscribers', JSON.stringify(subs));
+                }
+                setSubscribeStatus('success');
+            }
+        } catch {
+            setSubscribeStatus('error');
+        }
+
+        setNewsletterEmail('');
+        setTimeout(() => setSubscribeStatus('idle'), 3000);
+    };
+
     return (
         <footer className="footer">
             <div className="container">
@@ -50,14 +89,22 @@ export default function Footer({ onAdminClick }) {
                     <div className="footer-section">
                         <h4 className="footer-heading">Newsletter</h4>
                         <p className="newsletter-text">Get chess tips and updates</p>
-                        <div className="newsletter-form">
+                        <form className="newsletter-form" onSubmit={handleNewsletterSubmit}>
                             <input
                                 type="email"
                                 placeholder="Your email"
                                 className="newsletter-input"
+                                value={newsletterEmail}
+                                onChange={(e) => setNewsletterEmail(e.target.value)}
+                                required
                             />
-                            <button className="btn btn-primary">Subscribe</button>
-                        </div>
+                            <button type="submit" className="btn btn-primary" disabled={subscribeStatus === 'submitting'}>
+                                {subscribeStatus === 'submitting' ? '...' :
+                                 subscribeStatus === 'success' ? '✓ Subscribed!' :
+                                 subscribeStatus === 'already' ? 'Already subscribed' :
+                                 subscribeStatus === 'error' ? 'Error' : 'Subscribe'}
+                            </button>
+                        </form>
                     </div>
                 </div>
 

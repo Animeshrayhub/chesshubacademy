@@ -1,14 +1,35 @@
-import FloatingChessScene3D from './ChessScene3D';
+import { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import './Hero.css';
 
+const FloatingChessScene3D = lazy(() => import('./ChessScene3D'));
+
 export default function Hero() {
+    const heroRef = useRef(null);
+    const [isVisible, setIsVisible] = useState(true);
+
+    useEffect(() => {
+        const el = heroRef.current;
+        if (!el) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => setIsVisible(entry.isIntersecting),
+            { threshold: 0.1 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
     const scrollToBooking = () => {
         document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' });
     };
 
     return (
-        <section className="hero-section">
-            <FloatingChessScene3D />
+        <section className="hero-section" ref={heroRef}>
+            {isVisible && (
+                <Suspense fallback={null}>
+                    <FloatingChessScene3D />
+                </Suspense>
+            )}
 
             <div className="hero-content">
                 <div className="container">
@@ -25,7 +46,7 @@ export default function Hero() {
                         </h1>
 
                         <p className="hero-subtitle">
-                            Join India's premier online chess academy. Master the game with personalized
+                            Join India&apos;s premier online chess academy. Master the game with personalized
                             coaching from grandmasters and international masters. Transform your passion
                             into championships.
                         </p>

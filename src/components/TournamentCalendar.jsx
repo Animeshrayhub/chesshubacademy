@@ -17,6 +17,9 @@ export default function TournamentCalendar() {
                         title="Chess Tournaments India"
                         className="tournament-iframe"
                         frameBorder="0"
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        sandbox="allow-scripts allow-forms allow-popups"
                         allowFullScreen
                     />
                 </div>
