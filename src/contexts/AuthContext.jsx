@@ -121,7 +121,19 @@ export function AuthProvider({ children }) {
                 password,
             });
 
-            if (error) return { data, error };
+            if (error) {
+                const msg = error?.message || 'Login failed';
+                const networkError = /failed to fetch|networkerror|network request failed/i.test(msg);
+                if (networkError) {
+                    return {
+                        data: null,
+                        error: {
+                            message: 'Network/Auth connection failed. Verify Supabase URL and Anon Key in deployment environment and try again.',
+                        },
+                    };
+                }
+                return { data, error };
+            }
 
             const authUser = data?.user || null;
             const dbUser = await fetchAppUser(authUser);
