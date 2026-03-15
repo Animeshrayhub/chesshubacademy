@@ -17,6 +17,7 @@ const StudentAchievements = lazy(() => import('./components/StudentAchievements'
 const Testimonials = lazy(() => import('./components/Testimonials'));
 const CoachProfiles = lazy(() => import('./components/CoachProfiles'));
 const YouTubeSection = lazy(() => import('./components/YouTubeSection'));
+const GoogleDriveGallery = lazy(() => import('./components/GoogleDriveGallery'));
 const FAQ = lazy(() => import('./components/FAQ'));
 const DemoBooking = lazy(() => import('./components/DemoBooking'));
 
@@ -36,6 +37,8 @@ const EndgamesPage = lazy(() => import('./pages/EndgamesPage'));
 const ChessTipsPage = lazy(() => import('./pages/ChessTipsPage'));
 const SEOContentPage = lazy(() => import('./pages/SEOContentPage'));
 const ReferralLandingPage = lazy(() => import('./pages/ReferralLandingPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
+const TermsConditionsPage = lazy(() => import('./pages/TermsConditionsPage'));
 const Classroom = lazy(() => import('./pages/Classroom'));
 
 function HomePage({ onAdminClick }) {
@@ -78,6 +81,7 @@ function HomePage({ onAdminClick }) {
           <TournamentCalendar />
         </ErrorBoundary>
         <YouTubeSection />
+        <GoogleDriveGallery />
         <FAQ />
         <DemoBooking />
       </Suspense>
@@ -109,6 +113,8 @@ function App() {
         <Route path="/chess-tips" element={<ChessTipsPage />} />
         <Route path="/learn/:slug" element={<SEOContentPage />} />
         <Route path="/ref/:code" element={<ReferralLandingPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-and-conditions" element={<TermsConditionsPage />} />
         <Route path="/classroom/:sessionId" element={
           <ProtectedRoute allowAll>
             <Classroom />

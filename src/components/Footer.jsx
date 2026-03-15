@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import './Footer.css';
 
@@ -73,6 +74,8 @@ export default function Footer({ onAdminClick }) {
                         <ul className="footer-links">
                             <li><a href="#features">Features</a></li>
                             <li><a href="#booking">Book Demo</a></li>
+                            <li><Link to="/privacy-policy">Privacy Policy</Link></li>
+                            <li><Link to="/terms-and-conditions">Terms & Conditions</Link></li>
                             <li><a href="#" onClick={(e) => { e.preventDefault(); onAdminClick(); }}>Admin</a></li>
                         </ul>
                     </div>
