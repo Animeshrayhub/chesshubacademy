@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../services/supabase';
+import { supabase, getSupabaseEnvDiagnostics } from '../services/supabase';
 import { AuthContext } from './useAuth';
 import { getUserRecord } from '../api/userApi';
 
@@ -112,8 +112,23 @@ export function AuthProvider({ children }) {
     // Public signup removed — only admin can create accounts
 
     const login = async (email, password) => {
+        const envDiag = getSupabaseEnvDiagnostics();
+        const host = typeof window !== 'undefined' ? window.location.hostname : 'unknown-host';
+
         if (!supabase) {
-            return { error: { message: 'Supabase not configured. Please set up Supabase credentials.' } };
+            const missing = [
+                !envDiag.hasUrl ? 'VITE_SUPABASE_URL' : null,
+                !envDiag.hasAnonKey ? 'VITE_SUPABASE_ANON_KEY' : null,
+                envDiag.hasAnonKey && !envDiag.anonKeyLooksJwt ? 'VITE_SUPABASE_ANON_KEY (invalid format)' : null,
+            ].filter(Boolean).join(', ');
+
+            return {
+                error: {
+                    message: missing
+                        ? `Supabase config missing/invalid on ${host}: ${missing}. Update deployment environment variables and redeploy.`
+                        : `Supabase not configured on ${host}. Verify deployment environment variables and redeploy.`,
+                },
+            };
         }
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -125,10 +140,11 @@ export function AuthProvider({ children }) {
                 const msg = error?.message || 'Login failed';
                 const networkError = /failed to fetch|networkerror|network request failed/i.test(msg);
                 if (networkError) {
+                    const keyHint = envDiag.anonKeyLooksJwt ? '' : ' Anon key format looks invalid.';
                     return {
                         data: null,
                         error: {
-                            message: 'Network/Auth connection failed. Verify Supabase URL and Anon Key in deployment environment and try again.',
+                            message: `Network/Auth connection failed on ${host}. Verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in deployment env and redeploy.${keyHint}`,
                         },
                     };
                 }
@@ -150,7 +166,7 @@ export function AuthProvider({ children }) {
                 data: null,
                 error: {
                     message: networkError
-                        ? 'Network/Auth connection failed. Verify Supabase URL and Anon Key in deployment environment and try again.'
+                        ? `Network/Auth connection failed on ${host}. Verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in deployment env and redeploy.${envDiag.anonKeyLooksJwt ? '' : ' Anon key format looks invalid.'}`
                         : msg,
                 },
             };

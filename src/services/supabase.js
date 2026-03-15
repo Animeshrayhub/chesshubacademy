@@ -9,6 +9,20 @@ const supabaseAnonKey = typeof rawSupabaseAnonKey === 'string'
     ? rawSupabaseAnonKey.replace(/\s+/g, '')
     : rawSupabaseAnonKey;
 
+export function getSupabaseEnvDiagnostics() {
+    const hasUrl = typeof rawSupabaseUrl === 'string' && rawSupabaseUrl.trim().length > 0;
+    const sanitizedKey = typeof rawSupabaseAnonKey === 'string' ? rawSupabaseAnonKey.replace(/\s+/g, '') : '';
+    const hasAnonKey = typeof sanitizedKey === 'string' && sanitizedKey.length > 0;
+    const anonKeyLooksJwt = hasAnonKey && sanitizedKey.split('.').length === 3;
+    return {
+        hasUrl,
+        hasAnonKey,
+        anonKeyLooksJwt,
+        urlPreview: hasUrl ? `${rawSupabaseUrl.trim().slice(0, 32)}...` : null,
+        anonKeyLength: hasAnonKey ? sanitizedKey.length : 0,
+    };
+}
+
 if (typeof rawSupabaseAnonKey === 'string' && /\s/.test(rawSupabaseAnonKey)) {
     console.warn('[ChessHub] VITE_SUPABASE_ANON_KEY contains whitespace/newlines; sanitized automatically.');
 }
