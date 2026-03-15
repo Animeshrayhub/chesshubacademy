@@ -1,8 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase configuration — env vars are required
-const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const rawSupabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const DEFAULT_SUPABASE_URL = 'https://weeuxobbplpmlinlfuzs.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZXV4b2JicGxwbWxpbmxmdXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1Mjg5NDIsImV4cCI6MjA4NTEwNDk0Mn0.RTyTZEgYMZPXz_rhygnwSffjs8yA69lzVtRXf2ARoLo';
+
+// Supabase configuration — env vars preferred, safe public fallbacks used if missing in deployment
+const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+const rawSupabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
 
 const supabaseUrl = typeof rawSupabaseUrl === 'string' ? rawSupabaseUrl.trim() : rawSupabaseUrl;
 const supabaseAnonKey = typeof rawSupabaseAnonKey === 'string'
@@ -10,15 +13,19 @@ const supabaseAnonKey = typeof rawSupabaseAnonKey === 'string'
     : rawSupabaseAnonKey;
 
 export function getSupabaseEnvDiagnostics() {
-    const hasUrl = typeof rawSupabaseUrl === 'string' && rawSupabaseUrl.trim().length > 0;
-    const sanitizedKey = typeof rawSupabaseAnonKey === 'string' ? rawSupabaseAnonKey.replace(/\s+/g, '') : '';
+    const envUrl = import.meta.env.VITE_SUPABASE_URL;
+    const envAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const hasUrl = typeof envUrl === 'string' && envUrl.trim().length > 0;
+    const sanitizedKey = typeof envAnonKey === 'string' ? envAnonKey.replace(/\s+/g, '') : '';
     const hasAnonKey = typeof sanitizedKey === 'string' && sanitizedKey.length > 0;
     const anonKeyLooksJwt = hasAnonKey && sanitizedKey.split('.').length === 3;
     return {
         hasUrl,
         hasAnonKey,
         anonKeyLooksJwt,
-        urlPreview: hasUrl ? `${rawSupabaseUrl.trim().slice(0, 32)}...` : null,
+        usingFallbackUrl: !hasUrl,
+        usingFallbackAnonKey: !hasAnonKey,
+        urlPreview: (hasUrl ? envUrl.trim() : DEFAULT_SUPABASE_URL).slice(0, 32) + '...',
         anonKeyLength: hasAnonKey ? sanitizedKey.length : 0,
     };
 }
@@ -29,10 +36,12 @@ if (typeof rawSupabaseAnonKey === 'string' && /\s/.test(rawSupabaseAnonKey)) {
 
 if (!supabaseUrl || !supabaseAnonKey) {
     console.warn(
-        '[ChessHub] Missing Supabase environment variables.\n' +
+        '[ChessHub] Supabase configuration unavailable.\n' +
         'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.\n' +
         'Database features will be unavailable.'
     );
+} else if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    console.warn('[ChessHub] Using built-in Supabase fallback values because deployment env vars are missing.');
 }
 
 // Create Supabase client (will be null if env vars missing or invalid)
