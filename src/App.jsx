@@ -7,7 +7,6 @@ import AnimatedStats from './components/AnimatedStats';
 import WhyChooseUs from './components/WhyChooseUs';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
-import ProtectedRoute from './components/ProtectedRoute';
 import { useOrganizationSchema } from './components/SEOSchemas';
 import './App.css';
 
@@ -15,22 +14,17 @@ import './App.css';
 const CoursesPreview = lazy(() => import('./components/CoursesPreview'));
 const StudentAchievements = lazy(() => import('./components/StudentAchievements'));
 const Testimonials = lazy(() => import('./components/Testimonials'));
-const CoachProfiles = lazy(() => import('./components/CoachProfiles'));
+const ParentReviewForm = lazy(() => import('./components/ParentReviewForm'));
 const YouTubeSection = lazy(() => import('./components/YouTubeSection'));
 const GoogleDriveGallery = lazy(() => import('./components/GoogleDriveGallery'));
 const FAQ = lazy(() => import('./components/FAQ'));
 const DemoBooking = lazy(() => import('./components/DemoBooking'));
 
-const AdminView = lazy(() => import('./components/AdminView'));
 const TournamentCalendar = lazy(() => import('./components/TournamentCalendar'));
 const EbookStore = lazy(() => import('./pages/EbookStore'));
 const TournamentPage = lazy(() => import('./pages/TournamentPage'));
 const BlogPage = lazy(() => import('./pages/BlogPage'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
-const CoachDashboard = lazy(() => import('./pages/CoachDashboard'));
-const DemoDashboard = lazy(() => import('./pages/DemoDashboard'));
 const DailyPuzzlePage = lazy(() => import('./pages/DailyPuzzlePage'));
 const OpeningsPage = lazy(() => import('./pages/OpeningsPage'));
 const EndgamesPage = lazy(() => import('./pages/EndgamesPage'));
@@ -76,7 +70,6 @@ function HomePage({ onAdminClick }) {
         <CoursesPreview />
         <StudentAchievements />
         <Testimonials />
-        <CoachProfiles />
         <ErrorBoundary fallbackMessage="Tournament calendar failed to load.">
           <TournamentCalendar />
         </ErrorBoundary>
@@ -103,6 +96,7 @@ function App() {
     <Suspense fallback={<div className="lazy-loading">Loading...</div>}>
       <Routes>
         <Route path="/" element={<HomePage onAdminClick={() => navigate('/admin')} />} />
+        <Route path="/submit-review" element={<ParentReviewForm />} />
         <Route path="/ebooks" element={<EbookStore />} />
         <Route path="/tournaments" element={<TournamentPage />} />
         <Route path="/blog" element={<BlogPage />} />
@@ -115,43 +109,7 @@ function App() {
         <Route path="/ref/:code" element={<ReferralLandingPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-and-conditions" element={<TermsConditionsPage />} />
-        <Route path="/classroom/:sessionId" element={
-          <ProtectedRoute allowAll>
-            <Classroom />
-          </ProtectedRoute>
-        } />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/demo-dashboard" element={<DemoDashboard />} />
-        <Route path="/student-dashboard" element={
-          <ProtectedRoute>
-            <StudentDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <StudentDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/coach-dashboard" element={
-          <ProtectedRoute requireCoach>
-            <CoachDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/coach/*" element={
-          <ProtectedRoute requireCoach>
-            <CoachDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin-dashboard" element={
-          <ProtectedRoute requireAdmin>
-            <Navigate to="/admin/dashboard" replace />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/*" element={
-          <ProtectedRoute requireAdmin>
-            <AdminView />
-          </ProtectedRoute>
-        } />
+        <Route path="/classroom/:sessionId" element={<Classroom />} />
       </Routes>
     </Suspense>
   );

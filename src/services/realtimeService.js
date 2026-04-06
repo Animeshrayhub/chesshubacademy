@@ -1,97 +1,77 @@
-import { supabase } from './supabase';
-import { updateSession } from '../api/sessionApi';
+// Stub realtime service (no backend)
+export const subscribeToTable = (table, callback) => {
+    console.log(`Realtime subscription not available for table: ${table}`);
+    return { unsubscribe: () => {} };
+};
 
-// Tracks moves between FEN checkpoints — reset per session
-let moveCounter = 0;
+export const subscribeToChannel = (channel, event, callback) => {
+    console.log(`Channel subscription not available: ${channel}`);
+    return { unsubscribe: () => {} };
+};
 
-export function createClassroomChannel(sessionId) {
-    if (!supabase) return null;
-    return supabase.channel(`classroom-${sessionId}`, {
-        config: { broadcast: { self: false } },
-    });
-}
+export const createClassroomChannel = (sessionId) => {
+    console.log(`Classroom channel not available: ${sessionId}`);
+    return null;
+};
 
-export function subscribeChannel(channel) {
-    if (!channel) return Promise.resolve(null);
-    return channel.subscribe();
-}
+export const subscribeChannel = (channel, event, callback) => {
+    console.log(`Channel subscribe not available`);
+    return { unsubscribe: () => {} };
+};
 
-export function sendMove(channel, { from, to, promotion, fen, san }) {
-    if (!channel) return;
-    channel.send({
-        type: 'broadcast',
-        event: 'move',
-        payload: { from, to, promotion, fen, san, timestamp: Date.now() },
-    });
-}
+export const sendMove = (channel, move) => {
+    console.log(`Send move not available`);
+};
 
-export function onMoveReceived(channel, callback) {
-    if (!channel) return;
-    channel.on('broadcast', { event: 'move' }, ({ payload }) => {
-        callback(payload);
-    });
-}
+export const sendPosition = (channel, position) => {
+    console.log(`Send position not available`);
+};
 
-export function sendBoardState(channel, fen) {
-    if (!channel) return;
-    channel.send({
-        type: 'broadcast',
-        event: 'board_state',
-        payload: { fen, timestamp: Date.now() },
-    });
-}
+export const onMoveReceived = (channel, callback) => {
+    console.log(`On move received not available`);
+    return { unsubscribe: () => {} };
+};
 
-export function onBoardStateReceived(channel, callback) {
-    if (!channel) return;
-    channel.on('broadcast', { event: 'board_state' }, ({ payload }) => {
-        callback(payload);
-    });
-}
+export const onPositionReceived = (channel, callback) => {
+    console.log(`On position received not available`);
+    return { unsubscribe: () => {} };
+};
 
-export function sendChatMessage(channel, { userId, name, text }) {
-    if (!channel) return;
-    channel.send({
-        type: 'broadcast',
-        event: 'chat',
-        payload: { userId, name, text, timestamp: Date.now() },
-    });
-}
+export const sendBoardState = (channel, state) => {
+    console.log(`Send board state not available`);
+};
 
-export function onChatReceived(channel, callback) {
-    if (!channel) return;
-    channel.on('broadcast', { event: 'chat' }, ({ payload }) => {
-        callback(payload);
-    });
-}
+export const onBoardStateReceived = (channel, callback) => {
+    console.log(`On board state received not available`);
+    return { unsubscribe: () => {} };
+};
 
-export function sendModeChange(channel, mode) {
-    if (!channel) return;
-    channel.send({
-        type: 'broadcast',
-        event: 'mode_change',
-        payload: { mode, timestamp: Date.now() },
-    });
-}
+export const sendChatMessage = (channel, message) => {
+    console.log(`Send chat message not available`);
+};
 
-export function onModeChange(channel, callback) {
-    if (!channel) return;
-    channel.on('broadcast', { event: 'mode_change' }, ({ payload }) => {
-        callback(payload);
-    });
-}
+export const onChatReceived = (channel, callback) => {
+    console.log(`On chat received not available`);
+    return { unsubscribe: () => {} };
+};
 
-export function checkpointIfNeeded(sessionId, fen) {
-    moveCounter++;
-    if (moveCounter % 10 === 0) {
-        updateSession(sessionId, { board_fen: fen });
-    }
-}
+export const sendModeChange = (channel, mode) => {
+    console.log(`Send mode change not available`);
+};
 
-export function resetMoveCounter() {
-    moveCounter = 0;
-}
+export const onModeChange = (channel, callback) => {
+    console.log(`On mode change not available`);
+    return { unsubscribe: () => {} };
+};
 
-export function destroyChannel(channel) {
-    if (!channel || !supabase) return;
-    supabase.removeChannel(channel);
-}
+export const checkpointIfNeeded = (channel) => {
+    console.log(`Checkpoint not available`);
+};
+
+export const resetMoveCounter = (channel) => {
+    console.log(`Reset move counter not available`);
+};
+
+export const destroyChannel = (channel) => {
+    console.log(`Destroy channel not available`);
+};

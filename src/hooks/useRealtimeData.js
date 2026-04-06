@@ -1,45 +1,28 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '../services/supabase';
+// Stub realtime data hook (no backend)
+import { useState, useEffect } from 'react';
 
-/**
- * Hook to subscribe to Supabase realtime changes for a table.
- * Returns the latest data and auto-refreshes on INSERT/UPDATE/DELETE.
- */
-export function useRealtimeData(table, fetchFn) {
+export const useRealtimeData = (table, fetchFunction) => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const fetchRef = useRef(fetchFn);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetchRef.current = fetchFn;
-    });
-
-    const loadData = useCallback(async () => {
-        try {
-            const result = await fetchRef.current();
-            setData(result || []);
-        } catch (err) {
-            console.error(`Error fetching ${table}:`, err);
-        }
-        setLoading(false);
-    }, [table]);
-
-    useEffect(() => {
-        loadData();
-
-        if (!supabase) return;
-
-        const channel = supabase
-            .channel(`${table}-realtime`)
-            .on('postgres_changes', { event: '*', schema: 'public', table }, () => {
-                loadData();
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
+        const loadData = async () => {
+            try {
+                if (fetchFunction) {
+                    const result = await fetchFunction();
+                    setData(result || []);
+                }
+            } catch (err) {
+                setError(err);
+                console.error('Error loading data:', err);
+            } finally {
+                setLoading(false);
+            }
         };
-    }, [loadData, table]);
 
-    return { data, loading, refresh: loadData };
-}
+        loadData();
+    }, []);
+
+    return { data, loading, error };
+};

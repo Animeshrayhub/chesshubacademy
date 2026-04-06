@@ -1,58 +1,55 @@
 import { useState, useEffect } from 'react';
-import { getContentByType } from '../api/contentApi';
-import { useRealtimeData } from '../hooks/useRealtimeData';
 import './Testimonials.css';
-
-const DEFAULT_TESTIMONIALS = [
-    {
-        id: 1, name: 'Poovandhree Naidoo', location: 'South Africa',
-        role: 'Parent of Saien, Age 11', rating: 5, image: '👨‍👩‍👦',
-        text: 'My son acquired the first position in the under-12 age category at the Ilembe district tournament in South Africa. The personalized coaching from ChessHub has been instrumental in his success!',
-    },
-    {
-        id: 2, name: 'Radhika Panuganthy', location: 'Hyderabad, India',
-        role: 'Parent of Suveer, Age 12', rating: 5, image: '👨‍👩‍👧',
-        text: 'Suveer won second prize in the Dubai School Games Chess Championship! The structured curriculum and expert guidance have exceeded our expectations. Highly recommend ChessHub Academy.',
-    },
-    {
-        id: 3, name: 'Sonal Tewari', location: 'Mumbai, India',
-        role: 'Parent of Zoe, Age 7', rating: 5, image: '👩‍👧',
-        text: 'Zoe won the under-8 age category prize in the International FIDE rating chess tournament held in Chennai. The coaches are patient, knowledgeable, and truly care about each student.',
-    },
-    {
-        id: 4, name: 'Tarun Gupta', location: 'Delhi, India',
-        role: 'Parent of Teddy, Age 6', rating: 5, image: '👨‍👦',
-        text: 'My son won 1st prize at the New York Chess Championship in the under-6 age category! The online classes are engaging and the progress tracking helps us monitor his improvement.',
-    },
-    {
-        id: 5, name: 'Simran Oberoi', location: 'Bangalore, India',
-        role: 'Parent of Isla, Age 7', rating: 5, image: '👪',
-        text: 'Isla won the Lincoln Junior Chess Tournament in the United Kingdom! ChessHub Academy has transformed her from a beginner to a champion. Forever grateful to the team!',
-    },
-];
 
 export default function Testimonials() {
     const [activeIndex, setActiveIndex] = useState(0);
-    const { data: siteTestimonials } = useRealtimeData('site_content', () => getContentByType('testimonial'));
-
-    const testimonials = siteTestimonials.length > 0
-        ? siteTestimonials.map(t => ({
-            id: t.id,
-            name: t.title || 'Anonymous',
-            location: t.metadata?.location || '',
-            role: t.metadata?.role || '',
-            rating: t.metadata?.rating || 5,
-            text: t.content || '',
-            image: t.metadata?.image || '👤',
-        }))
-        : DEFAULT_TESTIMONIALS;
+    const [testimonials, setTestimonials] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [showSubmitForm, setShowSubmitForm] = useState(false);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setActiveIndex((current) => (current + 1) % testimonials.length);
-        }, 5000);
-        return () => clearInterval(interval);
+        // Load testimonials from JSON file
+        fetch('/data/reviews.json')
+            .then(res => res.json())
+            .then(data => {
+                setTestimonials(data || []);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Error loading reviews:', err);
+                setTestimonials([]);
+                setLoading(false);
+            });
+    }, []);
+
+    useEffect(() => {
+        if (testimonials.length > 0) {
+            const interval = setInterval(() => {
+                setActiveIndex((current) => (current + 1) % testimonials.length);
+            }, 5000);
+            return () => clearInterval(interval);
+        }
     }, [testimonials.length]);
+
+    if (loading) return null;
+
+    if (testimonials.length === 0) {
+        return (
+            <section className="section testimonials-section">
+                <div className="container">
+                    <div className="section-header text-center">
+                        <h2 className="section-subtitle">Testimonials</h2>
+                        <h1 className="section-title fade-in">
+                            Our Student&apos;s <span className="text-gradient">Happy Parents</span>
+                        </h1>
+                        <p className="section-description fade-in">
+                            Be the first to share your experience!
+                        </p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="section testimonials-section">
@@ -71,18 +68,29 @@ export default function Testimonials() {
                     <div className="testimonial-card glass-card">
                         <div className="testimonial-content">
                             <div className="testimonial-avatar">
-                                {testimonials[activeIndex].image}
+                                {testimonials[activeIndex].photo ? (
+                                    <img src={testimonials[activeIndex].photo} alt={testimonials[activeIndex].name} />
+                                ) : (
+                                    <div className="avatar-placeholder">👤</div>
+                                )}
                             </div>
                             <div className="testimonial-rating">
-                                {[...Array(testimonials[activeIndex].rating)].map((_, i) => (
+                                {[...Array(testimonials[activeIndex].rating || 5)].map((_, i) => (
                                     <span key={i} className="star">⭐</span>
                                 ))}
                             </div>
                             <p className="testimonial-text">&ldquo;{testimonials[activeIndex].text}&rdquo;</p>
                             <div className="testimonial-author">
                                 <div className="author-name">{testimonials[activeIndex].name}</div>
-                                <div className="author-location">{testimonials[activeIndex].location}</div>
-                                <div className="author-role">{testimonials[activeIndex].role}</div>
+                                {testimonials[activeIndex].location && (
+                                    <div className="author-location">{testimonials[activeIndex].location}</div>
+                                )}
+                                {testimonials[activeIndex].role && (
+                                    <div className="author-role">{testimonials[activeIndex].role}</div>
+                                )}
+                                {testimonials[activeIndex].date && (
+                                    <div className="author-date">{new Date(testimonials[activeIndex].date).toLocaleDateString()}</div>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -125,7 +125,6 @@ export default function Navbar() {
                     </div>
 
                     <div className="navbar-actions">
-                        <Link to="/login" className="btn btn-secondary navbar-login">Login</Link>
                         <button className="btn btn-primary navbar-cta" onClick={() => scrollToSection('booking')}>
                             Book Free Demo
                         </button>

@@ -1,65 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './StudentAchievements.css';
 
 export default function StudentAchievements() {
     const [selectedStudent, setSelectedStudent] = useState(null);
+    const [achievements, setAchievements] = useState([]);
 
-    const achievements = [
-        {
-            name: 'Arjun Sharma',
-            age: 12,
-            achievement: 'National Under-12 Champion',
-            tournament: 'All India Chess Championship 2025',
-            rating: 1850,
-            image: '👑',
-            details: 'Secured 1st position in the National Under-12 category with an impressive 8.5/9 score.'
-        },
-        {
-            name: 'Priya Desai',
-            age: 10,
-            achievement: 'State Champion',
-            tournament: 'Maharashtra State Chess Championship',
-            rating: 1420,
-            image: '🏆',
-            details: 'Won the Under-10 girls category, defeating 45 participants from across the state.'
-        },
-        {
-            name: 'Rohan Patel',
-            age: 14,
-            achievement: 'FIDE Master Candidate',
-            tournament: 'International FIDE Rating Tournament',
-            rating: 2180,
-            image: '⭐',
-            details: 'Achieved FIDE rating of 2180, on track to become a FIDE Master by age 15.'
-        },
-        {
-            name: 'Ananya Kumar',
-            age: 9,
-            achievement: 'District Champion',
-            tournament: 'Bangalore District Championship',
-            rating: 1250,
-            image: '🎯',
-            details: 'Youngest player to win the district championship in the open category.'
-        },
-        {
-            name: 'Vikram Singh',
-            age: 13,
-            achievement: 'International Bronze Medal',
-            tournament: 'Asian Youth Chess Championship',
-            rating: 1920,
-            image: '🥉',
-            details: 'Won bronze medal representing India in the Under-13 category at the Asian Championship.'
-        },
-        {
-            name: 'Ishita Reddy',
-            age: 11,
-            achievement: 'Rapid Chess Champion',
-            tournament: 'National Rapid Chess Championship',
-            rating: 1680,
-            image: '⚡',
-            details: 'Undefeated champion in the Under-11 rapid chess category with 9/9 wins.'
-        }
-    ];
+    useEffect(() => {
+        // Load achievements from JSON file
+        fetch('/data/achievements.json')
+            .then(res => res.json())
+            .then(data => {
+                setAchievements(data || []);
+            })
+            .catch(err => {
+                console.error('Error loading achievements:', err);
+                setAchievements([]);
+            });
+    }, []);
+
+    if (achievements.length === 0) {
+        return null; // Don't show the section if there are no achievements
+    }
 
     return (
         <section className="section achievements-section" id="achievements">
